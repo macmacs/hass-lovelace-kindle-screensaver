@@ -5,63 +5,76 @@ on:
     tags: [ 'v*.*.*' ]
 
 jobs:
-  multi:
+  docker-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Extract package version
         run: node -p -e '`PACKAGE_VERSION=${require("./package.json").version}`' >> $GITHUB_ENV
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push to Docker
-        uses: docker/build-push-action@v2
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push to GitHub Container Registry
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm/v7,linux/arm64
           push: true
           tags: |
-            sibbl/hass-lovelace-kindle-screensaver:${{ env.PACKAGE_VERSION }},
-            sibbl/hass-lovelace-kindle-screensaver:latest
-      - name: Build and push HA_Addon AMD64 to Docker
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile.HA_ADDON
-          build-args: BUILD_FROM=homeassistant/amd64-base:latest
-          platforms: linux/amd64
-          push: true
-          tags: |
-            sibbl/hass-lovelace-kindle-screensaver-ha-addon-amd64:${{ env.PACKAGE_VERSION }},
-            sibbl/hass-lovelace-kindle-screensaver-ha-addon-amd64:latest
-      - name: Build and push HA_Addon aarch64 to Docker
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile.HA_ADDON
-          build-args: BUILD_FROM=homeassistant/aarch64-base:latest
-          platforms: linux/arm64/v8
-          push: true
-          tags: |
-            sibbl/hass-lovelace-kindle-screensaver-ha-addon-aarch64:${{ env.PACKAGE_VERSION }},
-            sibbl/hass-lovelace-kindle-screensaver-ha-addon-aarch64:latest
+            ghcr.io/${{ github.repository }}:${{ env.PACKAGE_VERSION }},
+            ghcr.io/${{ github.repository }}:latest
 
-      - name: Build and push HA_Addon ARMv7 to Docker
-        uses: docker/build-push-action@v2
+  ha-addon-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, aarch64, armv7]
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            base: homeassistant/amd64-base:latest
+          - arch: aarch64
+            platform: linux/arm64/v8
+            base: homeassistant/aarch64-base:latest
+          - arch: armv7
+            platform: linux/arm/v7
+            base: homeassistant/armv7-base:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Extract package version
+        run: node -p -e '`PACKAGE_VERSION=${require("./package.json").version}`' >> $GITHUB_ENV
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          platforms: ${{ matrix.platform }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push HA Addon
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile.HA_ADDON
-          build-args: BUILD_FROM=homeassistant/armv7-base:latest
-          platforms: linux/arm/v7
+          build-args: BUILD_FROM=${{ matrix.base }}
+          platforms: ${{ matrix.platform }}
           push: true
           tags: |
-            sibbl/hass-lovelace-kindle-screensaver-ha-addon-armv7:${{ env.PACKAGE_VERSION }},
-            sibbl/hass-lovelace-kindle-screensaver-ha-addon-armv7:latest
+            ghcr.io/${{ github.repository }}-ha-addon-${{ matrix.arch }}:${{ env.PACKAGE_VERSION }},
+            ghcr.io/${{ github.repository }}-ha-addon-${{ matrix.arch }}:latest

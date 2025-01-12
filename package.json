@@ -1,12 +1,12 @@
 {
   "name": "hass-lovelace-kindle-screensaver",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "author": "sibbl",
+  "author": "macmacs",
   "license": "MIT",
   "dependencies": {
     "cron": "^1.8.2",
