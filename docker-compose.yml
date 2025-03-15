@@ -1,23 +1,31 @@
-version: "3.8"
-
 services:
   app:
-    image: sibbl/hass-lovelace-kindle-screensaver:latest
+    # image: sibbl/hass-lovelace-kindle-screensaver:latest
+    build: .
     environment:
-      - HA_BASE_URL=https://your-path-to-home-assistant:8123
-      - HA_SCREENSHOT_URL=/lovelace?kiosk
-      - HA_ACCESS_TOKEN=eyJ0...
-      - CRON_JOB=* * * * *
-      - RENDERING_TIMEOUT=30000
-      - RENDERING_DELAY=0
-      - RENDERING_SCREEN_HEIGHT=800
-      - RENDERING_SCREEN_WIDTH=600
-      - GRAYSCALE_DEPTH=8
-      - OUTPUT_PATH=/output/cover
-      - LANGUAGE=en
-      - ROTATION=0
-      - SCALING=1
+      HA_BASE_URL: http://10.0.0.130:8123
+      HA_SCREENSHOT_URL: /dashboard-epaper?kiosk
+      HA_ACCESS_TOKEN: >-
+        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzNDJhMWVhMWUzYTU0OTJkOTE2OTAzZWIzOTE1NWUzNCIsImlhdCI6MTczNjYyMzkwMiwiZXhwIjoyMDUxOTgzOTAyfQ.kln9YXAG95rHBwoZ9XNFbm2K4tYmywLgnjEBXN10-ZM
+      LANGUAGE: en
+      CRON_JOB: "* * * * *"
+      RENDERING_TIMEOUT: 20000
+      RENDERING_DELAY: "0"
+      RENDERING_SCREEN_HEIGHT: 528
+      RENDERING_SCREEN_WIDTH: 880
+      BROWSER_LAUNCH_TIMEOUT: "30000"
+      ROTATION: "270"
+      SCALING: "1"
+      GRAYSCALE_DEPTH: "8"
+      IMAGE_FORMAT: bmp
+      COLOR_MODE: TrueColor
+      REMOVE_GAMMA: true
+      PREFERS_COLOR_SCHEME: light
+      HA_BATTERY_WEBHOOK: ""
+      SATURATION: 1
+      CONTRAST: 1
+      OUTPUT_PATH: /output/cover
     ports:
-      - 5000:5000
+      - 5001:5000
     volumes:
       - ./output/:/output

@@ -9,9 +9,9 @@
   "author": "macmacs",
   "license": "MIT",
   "dependencies": {
-    "cron": "^1.8.2",
-    "fs-extra": "^10.0.0",
+    "cron": "^4.1.0",
+    "fs-extra": "^11.3.0",
     "gm": "^1.23.1",
-    "puppeteer": "^11.0.0"
+    "puppeteer": "^24.4.0"
   }
 }
