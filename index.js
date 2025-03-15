@@ -30,6 +30,9 @@ const batteryStore = {};
       "--disable-dev-shm-usage",
       "--no-sandbox",
       `--lang=${config.language}`,
+      "--disable-font-smoothing",
+      "--disable-gpu",
+      "--font-render-hinting=none",
       config.ignoreCertificateErrors && "--ignore-certificate-errors"
     ].filter((x) => x),
     defaultViewport: null,
@@ -175,7 +178,7 @@ async function renderAndConvertAsync(browser) {
     console.log(`Rendering ${url} to image...`);
     await renderUrlToImageAsync(browser, pageConfig, url, tempPath);
 
-    console.log(`Converting rendered screenshot of ${url} to grayscale...`);
+    console.log(`Converting rendered screenshot of ${url} to ${pageConfig.colorMode} ...`);
     await convertImageToKindleCompatiblePngAsync(
       pageConfig,
       tempPath,
@@ -269,6 +272,18 @@ async function renderUrlToImageAsync(browser, pageConfig, url, path) {
         body {
           zoom: ${pageConfig.scaling * 100}%;
           overflow: hidden;
+          -webkit-font-smoothing: none;
+          font-smooth: never;
+          text-rendering: geometricPrecision;
+        }
+        * {
+          -webkit-font-smoothing: none;
+          font-smooth: never;
+          text-rendering: geometricPrecision;
+          color: black !important;
+          background-color: white !important;
+          text-shadow: none !important;
+          box-shadow: none !important;
         }`
     });
 
@@ -311,7 +326,7 @@ function convertImageToKindleCompatiblePngAsync(
       .rotate("white", pageConfig.rotation)
       .type(pageConfig.colorMode)
       .level(pageConfig.blackLevel, pageConfig.whiteLevel)
-      .bitdepth(pageConfig.grayscaleDepth);
+      .bitdepth(pageConfig.colorMode === 'GrayScale' ? 8 : 24);
 
     // For BMP format, we don't set quality since it's not applicable
     if (pageConfig.imageFormat !== 'bmp') {
